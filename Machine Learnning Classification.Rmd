@@ -1,0 +1,58 @@
+---
+title: "Machine Learning Classification"
+author: "Anestis Karonidis"
+date: "21/7/2020"
+output: html_document
+---
+
+```{r Phase 1 importing the necessary libraries}
+library(tidyverse)
+library(caret)
+library(kernlab)
+library(e1071)
+```
+```{r Phase 2 checking for na }
+data("iris")
+sum(is.na(iris))
+set.seed(100)
+```
+```{r Phase 3 pretraining and testing}
+Training <- createDataPartition(iris$Species, p =0.8, list = FALSE)
+TrainingSet <- iris[Training,]
+TestingSet <- iris[-Training,]
+
+```
+```{r Phase 4 creating the models cross validation and simple}
+Model <- train(Species ~ ., data = TrainingSet, 
+               na.action = na.omit,
+               trControl = trainControl(method = 'none'),
+               preProcess = c('scale', 'center'),
+               tuneGrid = data.frame(degree = 1 , scale = 1 , C = 1),
+               method = 'svmPoly')
+
+Model.cv <- train(Species ~ ., data = TrainingSet, 
+               na.action = na.omit,
+               trControl = trainControl(method = 'cv', number = 10),
+               preProcess = c('scale', 'center'),
+               tuneGrid = data.frame(degree = 1 , scale = 1 , C = 1),
+               method = 'svmPoly')
+```
+```{r Phase 5 Applying model for prediction}
+Model.training <- predict(Model, TrainingSet)
+Model.testing <- predict(Model, TestingSet)
+Model.cv <- predict(Model.cv, TrainingSet)
+```
+```{r Phase 6 Model performance confusion matric and statistics}
+Model.training.confusion <- confusionMatrix(Model.training, TrainingSet$Species)
+Model.testing.confusion <- confusionMatrix(Model.testing, TestingSet$Species)
+Model.cv.confusion <- confusionMatrix(Model.cv, TrainingSet$Species)
+print(Model.training.confusion)
+print(Model.testing.confusion)
+print(Model.cv.confusion)
+```
+```{r Phase 7 others}
+Importance <- varImp(Model)
+plot(Importance)
+plot(Importance, col = "red")
+```
+
